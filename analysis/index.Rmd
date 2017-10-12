@@ -8,4 +8,5 @@ output:
 Welcome to my page of epidemiology assignments and simulations.
 
 [optimal control rate](optimal_control_rate.html)
+
 [confounding and effect modification in R](confounding_vs_effect_modification.html)

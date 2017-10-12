@@ -68,8 +68,6 @@ r1 = c(
   (-2-sqrt(4 - 4*a*(-1)))/(2*a))
 ```
 
-$\left\{\right\}$
-
 This yields 2 results for $r_{1}$: $\left\{`r round(r1[1], 2)`, `r round(r1[2], 2)`\right\}$, where 
 $r_{1} = `r round(r1[1], 2)`$ is the only viable option.
 
