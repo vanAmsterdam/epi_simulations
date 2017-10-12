@@ -79,28 +79,54 @@ $\frac{N_{cases}}{N_{controls}} = \frac{r_{1}}{1-r_{1}} = `r round(r1[1]/(1-r1[1
 
 So about 2 controls per case.
 
-For a range of odds ratios with plot
-```{r}
+For a range of odds ratios and exposure rates, with plot
+```{r, message=F}
+require(data.table)
+require(ggplot2)
+require(magrittr)
+
 OR = 1:10
-p0 = 0.05
-
-# the math
-O0 = p0/(1-p0)
-O1 = OR * O0
-p1 = O1/(1+O1)
-a  = ((p1*(1-p1))/(p0*(1-p0))) + 1
+p0_values = c(0.01, 0.05, 0.15, 0.25, 0.5, 0.75, 0.85, 0.95, 0.99)
 
 
-r1 = c(
-  (-2+sqrt(4 - 4*a*(-1)))/(2*a),
-  (-2-sqrt(4 - 4*a*(-1)))/(2*a))
-r1 = r1[r1>0] # pick only the values greater than zero
-ncontrols = (1-r1) / r1
-plot(OR, ncontrols, 
-     xlim = c(0, max(OR)),
-     ylim = c(0, ceiling(max(ncontrols))),
-     ylab = "Number of controls per case", xlab = "Expected odds ratio", 
-     main = "Optimal number of controls in a case-control study", sub = "given an exposure prevalence = 0.05 in the source population")
+control_array = matrix(nrow = length(OR), ncol = length(p0_values))
+for (i in 1:length(p0_values)) {
+  p0 = p0_values[i]
+  
+  # the math
+  O0 = p0/(1-p0)
+  O1 = OR * O0
+  p1 = O1/(1+O1)
+  a  = ((p1*(1-p1))/(p0*(1-p0))) + 1
+  
+  
+  r1 = c(
+    (-2+sqrt(4 - 4*a*(-1)))/(2*a),
+    (-2-sqrt(4 - 4*a*(-1)))/(2*a))
+  r1 = r1[r1>0] # pick only the values greater than zero
+  ncontrols = (1-r1) / r1
+  control_array[,i] = ncontrols
+}
+
+df <- as.data.table(control_array)
+df[, OR:=OR]
+df_melt <- melt(df, id.vars = "OR", 
+                variable.name = "exposure_prevalence", value.name = "n_controls")
+df_melt[, exposure_prevalence:=factor(exposure_prevalence, 
+                                      levels = setdiff(colnames(df), "OR"),
+                                      labels = p0_values)]
+
+# plot(OR, ncontrols, 
+#      xlim = c(0, max(OR)),
+#      ylim = c(0, ceiling(max(ncontrols))),
+#      ylab = "Number of controls per case", xlab = "Expected odds ratio", 
+#      main = "Optimal number of controls in a case-control study", sub = "given an exposure prevalence = 0.05 in the source population")
+
+df_melt %>%
+  ggplot(aes(x = OR, y = n_controls, col = exposure_prevalence)) + 
+  geom_line() + 
+  labs(x = "Expected odds ratio", y = "Optimal number of controls",
+       title = "Optimal number of controls in a case-control study")
 
 ```
 
