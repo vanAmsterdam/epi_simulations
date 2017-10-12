@@ -1,0 +1,107 @@
+---
+title: "Risk ratio and odds ratio"
+author: "Wouter van Amsterdam, MD"
+output:
+  html_document: default
+  html_notebook: default
+---
+
+```{r setup}
+library(data.table)
+library(epitools)
+library(magrittr)
+library(knitr)
+```
+
+
+The purpose of this report is to compare odds ratios and risk ratios
+
+Simulate a cohort study, studying the risk of lung cancer within 20 years for smokers and non-smokers, assuming 
+continous exposure (the same amount of sigarettes each day) and no cross-over between groups.
+- Domain: adults
+- Determinant: smoking
+- Outcome: lung cancer within 20 years
+
+Assumptions:
+- smoking prevalence = 40%
+- risk of lung cancer within 20 years for non-smokers = 5%
+- risk ratio for smoking = 10 (which is pretty accurate)
+
+
+Setup experiment
+Conventions:
+- Add 0 for unexposed group, 1 for exposed group
+```{r cohort, results = 'asis'}
+# define variables
+n = 10000
+prev_exp = .4
+risk_ratio_exp = 10
+r0 = 0.05
+r1 = r0 * risk_ratio_exp
+
+# simulate data
+set.seed(2)
+df <- data.table(
+  patient_id = 1:n,
+  smoker = as.logical(rbinom(n = n, size = 1, prob = prev_exp))
+)
+
+df[smoker == F, lung_cancer:=as.logical(rbinom(n = .N, size = 1, prob = r0))]
+df[smoker == T, lung_cancer:=as.logical(rbinom(n = .N, size = 1, prob = r1))]
+
+# create contingency table
+kable(df[, table(smoker, lung_cancer)], caption = "Contingency table for cohort")
+
+# calculate table entries
+# n0 = n*(1-prev_exp)
+# n1 = n-n0
+# o0 = n0 * r0
+# o1 = n1 * r1
+
+# create table
+# cont_tab <- matrix(c(n0-o0, o0, n1-o1, o1), byrow = T, nrow = 2) %>%
+#   as.table(dnn = c("smoking", "lung_cancer"))
+
+# kable(cont_tab, caption = "Contingency table for cohort")
+
+```
+
+
+
+
+Now simulate a case control study in this data, with varying numbers of controls (1 on 1 to 1 on 3)
+Conventions:
+- n00 = number unexposed, without outcome
+- n01 = number unexposed, with outcome
+- n10 = number exposed, without outcome
+- n11 = number exposed, with outcome
+
+```{r}
+case_ids <- df[lung_cancer == T, patient_id]
+control_ids <- df[lung_cancer == F, patient_id]
+
+ncases = length(case_ids)
+ncontrols = seq(from = 1, to = 3, by = 0.25) * ncases
+
+controls <- sapply(ncontrols, function(x) sample(control_ids, size = x, replace = F))
+
+# new data from subsample of data
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

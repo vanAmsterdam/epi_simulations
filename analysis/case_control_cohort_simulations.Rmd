@@ -1,0 +1,72 @@
+---
+title: "Simulations for different sampling strategies in case-control studies"
+output: html_notebook
+author: Wouter van Amsterdam, MD
+---
+
+This report reviews some case-control sampling strategies, based on:
+* Epidemiology - an introduction, K. Rothman
+* Clinical Epidemiology, Grobbee & Hoes
+* Lectures and assignments from the Epidemiology Master from Julius Center Utrecht, the Netherlands
+
+
+```{r setup}
+require(magrittr)
+require(data.table)
+require(ggplot2)
+```
+
+
+
+
+```{r}
+data(diet, package = "Epi")
+setDT(diet)
+print(help(diet, package = "Epi"))
+head(diet)
+```
+
+Use energy group as binary exposure determinant (i.e. exposed or non-exposed), treating high energy as exposed
+
+Generate ID variable, ordered on date of inclusion
+```{r}
+diet[order(doe), id_ordered:=.I]
+diet[order(doe)][1:10, list(id_ordered, doe)]
+```
+
+
+Plot cohort
+```{r}
+diet %>%
+  dplyr::mutate(chd = factor(chd)) %>%
+  # dplyr::mutate(chd = factor(chd, levels = c(0,1), labels = c(0, 4))) %>%
+  ggplot(aes(x = doe, xend = dox, y = id_ordered, yend = id_ordered,
+             col = energy.grp)) + 
+  geom_segment() + 
+  geom_point(aes(x = dox, shape = chd, alpha = chd), color = "black") + scale_shape_manual(values = c(0, 4)) +
+  scale_alpha_manual(values = c(0,1)) +
+  labs(x = "Date", y = "Participant", title = "Study population inclusion dates (full cohort)")
+```
+
+
+Calculate cohort based effect measures
+
+```{r}
+# out1 <- with(diet,
+#   Epi::effx(response = chd, type = "binary",
+#             exposure = energy.grp, eff = c("RR")
+#             ))
+
+out1 <- diet[, table(energy.grp, chd)] %>%
+  epitools::oddsratio()
+
+out2 <- diet[, table(energy.grp, chd)] %>%
+  epiR::epi.2by2(method = "cohort.count")
+
+```
+
+
+
+
+
+

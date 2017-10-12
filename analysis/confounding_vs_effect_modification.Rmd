@@ -1,0 +1,60 @@
+---
+title: "Confounding vs effect modification in R"
+author: "Wouter van Amsterdam"
+---
+
+## Preparation
+Load data from car milage for several cars.
+```{r}
+data("mtcars")
+head(mtcars)
+knitr::opts_chunk$set(echo=TRUE)
+```
+
+
+## Modeling 
+
+The determinant is binary (transmission automatic vs manual), the outcome continuous (gallons per mile)
+First create a crude, unadjusted model without potential effect-modification: milage ~ transmission_type
+```{r}
+fit0 <- lm(mpg~am, data = mtcars)
+summary(fit0)
+```
+
+Then a model adjusted for potential confounders
+
+```{r}
+fit1 <- lm(mpg~am + wt, data = mtcars)
+summary(fit1)
+```
+
+
+As we can see, the effect of transmission om milage is confounded by the weight of the car.
+
+Now add a term of interaction (v-engine vs straight engine, use the function as.factor to treat this as categories instead of as a (continous) numeric variable)
+
+
+```{r}
+fit2 <- lm(mpg~am*as.factor(vs)+wt, data = mtcars)
+summary(fit2)
+```
+
+The beta for transmission is now reported for each category of the modifier.
+
+Now include an interaction term on the whole formula
+
+```{r}
+fit3 <- lm(mpg~(am+wt)*as.factor(vs), data = mtcars)
+summary(fit3)
+```
+
+
+In this situation, both the beta's for the determinant (manual vs automatic transmission) as the confounder (weight) get estimates for both levels of the modifier (vertical vs straight engine).
+
+
+
+```{r}
+fit4 <- lm(mpg~am*disp+wt, data = mtcars)
+summary(fit4)
+```
+
