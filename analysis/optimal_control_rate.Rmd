@@ -1,0 +1,111 @@
+---
+title: "Optimal control rate estimation for a case-control study"
+author: "Wouter van Amsterdam"
+date: 2017-10-12
+output: html_document
+---
+
+<!-- The file analysis/chunks.R contains chunks that define default settings
+shared across the workflowr files. -->
+```{r read-chunk, include=FALSE, cache=FALSE}
+knitr::read_chunk("chunks.R")
+```
+
+<!-- Update knitr chunk options -->
+```{r knitr-opts-chunk, include=FALSE}
+```
+
+<!-- Insert the date the file was last updated -->
+```{r last-updated, echo=FALSE, results='asis'}
+```
+
+<!-- Insert the code version (Git commit SHA1) if Git repository exists and R
+ package git2r is installed -->
+```{r code-version, echo=FALSE, results='asis'}
+```
+
+<!-- Add your analysis here -->
+# Question
+Given an expected odds-ratio $OR = 2$, and an exposure-prevalence in the source-population of $p_{1} = 0.05$, what is the optimal ratio of cases and controls? 
+
+The goal is to minimize the variance of the log odds-ratio, narrowing the 95% confidence interval with respect to the cases:controls ratio, given an expected OR and exposure prevalance in the source-population.
+
+$min(Var(ln(OR)))$
+
+Where
+
+$Var(ln(OR)) = \frac{1}{a} + \frac{1}{b} + \frac{1}{c} + \frac{1}{d}$
+
+With {a-d} the entries of the standard 2x2 contingency table.
+
+Whe can achieve this by writing each of the entries as a function of the $OR$, $p_{1}$ and 
+$r_{1} = \frac{N_{Cases}}{N}$, and differentiating with respect to $r_{1}$.
+
+The analytical solution for this problem is
+
+$r_{1} = \frac{-2 \pm \sqrt{4 - 4*\alpha*(-1))}}{2\alpha}$
+
+With
+
+$\alpha = \frac{p_{1}(1-p_{1})}{p_{0}(1-p_{0})}-1$ and $p_{1} = \frac{Odds_{1}}{1+Odds_{1}} = \frac{OR*Odds_{0}}{1 + OR*Odds_{0}}$
+
+Where $Odds_{0}$ is the odds for controls: $Odds_{0} = \frac{p_{0}}{1-p_{0}}$
+
+For this particular instance:
+```{r}
+OR = 2
+p0 = 0.05
+
+# the math
+O0 = p0/(1-p0)
+O1 = OR * O0
+p1 = O1/(1+O1)
+a  = ((p1*(1-p1))/(p0*(1-p0))) + 1
+
+
+r1 = c(
+  (-2+sqrt(4 - 4*a*(-1)))/(2*a),
+  (-2-sqrt(4 - 4*a*(-1)))/(2*a))
+```
+
+$\left\{\right\}$
+
+This yields 2 results for $r_{1}$: $\left\{`r round(r1[1], 2)`, `r round(r1[2], 2)`\right\}$, where 
+$r_{1} = `r round(r1[1], 2)`$ is the only viable option.
+
+Now the ratio of cases:controls
+
+$\frac{N_{cases}}{N_{controls}} = \frac{r_{1}}{1-r_{1}} = `r round(r1[1]/(1-r1[1]), 2)`$
+
+So about 2 controls per case.
+
+For a range of odds ratios with plot
+```{r}
+OR = 1:10
+p0 = 0.05
+
+# the math
+O0 = p0/(1-p0)
+O1 = OR * O0
+p1 = O1/(1+O1)
+a  = ((p1*(1-p1))/(p0*(1-p0))) + 1
+
+
+r1 = c(
+  (-2+sqrt(4 - 4*a*(-1)))/(2*a),
+  (-2-sqrt(4 - 4*a*(-1)))/(2*a))
+r1 = r1[r1>0] # pick only the values greater than zero
+ncontrols = (1-r1) / r1
+plot(OR, ncontrols, 
+     xlim = c(0, max(OR)),
+     ylim = c(0, ceiling(max(ncontrols))),
+     ylab = "Number of controls per case", xlab = "Expected odds ratio", 
+     main = "Optimal number of controls in a case-control study", sub = "given an exposure prevalence = 0.05 in the source population")
+
+```
+
+## Session information
+
+<!-- Insert the session information into the document -->
+```{r session-info}
+```
