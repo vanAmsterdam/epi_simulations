@@ -38,6 +38,7 @@ $Var(ln(OR)) = \frac{1}{a} + \frac{1}{b} + \frac{1}{c} + \frac{1}{d}$
 
 With {a-d} the entries of the standard 2x2 contingency table.
 
+## Analytical solution
 Whe can achieve this by writing each of the entries as a function of the $OR$, $p_{1}$ and 
 $r_{1} = \frac{N_{Cases}}{N}$, and differentiating with respect to $r_{1}$.
 
@@ -127,6 +128,130 @@ df_melt %>%
        title = "Optimal number of controls in a case-control study")
 
 ```
+
+## Compare with standard power calculations
+```{r}
+OR = 2
+p0 = 0.05
+
+# the math
+O0 = p0/(1-p0)
+O1 = OR * O0
+p1 = O1/(1+O1)
+
+n = 1000
+r1_seq = seq(0.01, 0.99, by = 0.01)
+
+# see if results match from SPSS provided by instructor
+power.prop.test(n = c(600,600), p1 = p1, p2 = p0, sig.level = 0.05)
+
+# find optimal power
+powers <- sapply(r1_seq, function(r1) {
+  max(power.prop.test(n = c(n*r1, n*(1-r1)), p1 = p1, p2 = p0, sig.level = 0.05)$power)
+})
+
+
+plot(r1_seq, powers, xlab = "case rate (n_cases / n_total)", ylab = "power", main = "Power for different sampling scenarios", sub = "OR = 2, p0 = 0.05")
+
+```
+
+## Computational minimum for variance of odds-ratio
+Recall that 
+
+$Var(ln(OR)) = \frac{1}{a} + \frac{1}{b} + \frac{1}{c} + \frac{1}{d}$
+
+Where
+
+$a = N*r1*p_{1}$ Number of cases with exposure; $p_{1}$ is calculated from $p_{0}$ and $OR$
+$b = N*(1-r1)*p_{0} $ Number of controls with exposure
+$c = N*r1*(1-p_{1}) $ Number of cases without exposure
+$d = N*(1-r1)*(1-p_{0}) $ Number of controls without exposure
+
+The variables $\left\{p_{0}, p_{1}\right\}$ are given by the case description. This equation should be minimized with respect to r1. 
+
+- note 1: The variance of the odds ratio is given as the sum of the inverses of the entries of the contingency table, therefore the exact position of which count goes to which cell is irrelevant to the current question
+- note 2: The total sample size $N$ is a factor present in each of the contingency table, and will not be relevant to the minimization problem with respect to $r_{1}$. The absolute variance of the odds ratio will of course depend on the total sample size. 
+
+```{r}
+OR = 2
+p0 = 0.05
+
+# the math
+O0 = p0/(1-p0)
+O1 = OR * O0
+p1 = O1/(1+O1)
+
+n = 1000
+r1_seq = seq(0.01, 0.99, by = 0.01)
+
+a = n * r1_seq * p1
+b = n * (1-r1_seq) * p0
+c = n * r1_seq * (1-p1)
+d = n * (1-r1_seq) * (1-p0)
+
+var_ln_OR <- (1/a) + (1/b) + (1/c) + (1/d)
+
+plot(r1_seq, var_ln_OR, type = "l", 
+     xlab = "case rate (n_cases / n_total)", ylab = "Var(ln(OR))", 
+     main = "Variance of log-odds ratio for different sampling scenarios", sub = "OR = 2, p0 = 0.05")
+
+```
+
+In this plot we see that for a wide range of case rates $r_{1}$, the variance in the odds-ratio will be similar. For the chosen sequence of case-rates, the variance was minimal for $r_{1} = 'r r1_seq[which.min(var_ln_OR)]'$. However, this was determined by the initially entered case rates. Now to find the minimum variance with computational measures
+
+```{r}
+library(ROI)
+OR = 2
+p0 = 0.05
+
+# the math
+O0 = p0/(1-p0)
+O1 = OR * O0
+p1 = O1/(1+O1)
+
+n = 1000
+r1_seq = seq(0.01, 0.99, by = 0.01)
+
+a = n * r1_seq * p1
+b = n * (1-r1_seq) * p0
+c = n * r1_seq * (1-p1)
+d = n * (1-r1_seq) * (1-p0)
+
+var_ln_OR <- (1/a) + (1/b) + (1/c) + (1/d)
+var_ln_OR_func <- function(x) {
+  1/(x*p1) + 1/((1-x)*p0) + 1/(x*(1-p1)) + 1/((1-x)*(1-p0))
+}
+
+# f_obj <- F_objective(F = var_ln_OR_func, n = 1)
+# opt_problem <- OP(f_obj, 
+#                   L_constraint(
+#                     L = matrix(c(1,1), ncol = 1),
+#                     dir = c(">", "<"),
+#                     rhs = c(0, 1)
+#                   ))
+# 
+# opt_problem <- OP(f_obj, 
+#                   bounds = V_bound(li = 1, ui = 1, lb = 0, ub = 1)
+#                   )
+#   
+# ROI_solve(opt_problem, start = 0.5)
+
+
+nlm(f = var_ln_OR_func, p = 0.5)
+nlm(f = var_ln_OR_func, p = 0.3)
+
+optim(par = 0.5, fn = var_ln_OR_func)
+optimize(f = var_ln_OR_func, interval = c(0,1))
+
+
+```
+
+## Conclusion
+
+At this point in time
+- The analytical solution and the computational solution are different, most likely I made a mistake in working out the equations
+- The optimal power calculation does not seem to equal the solution for the narrowest confidence interval of $ln(OR)$. Could this be related to the asymmetric confidence bounds for the OR? Power seeks to optimize the chance finding a lower bound > 1, while narrowing the confidence interval also cares about the upper limit.
+
 
 ## Session information
 
