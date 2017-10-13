@@ -163,14 +163,17 @@ $Var(ln(OR)) = \frac{1}{a} + \frac{1}{b} + \frac{1}{c} + \frac{1}{d}$
 Where
 
 $a = N*r1*p_{1}$ Number of cases with exposure; $p_{1}$ is calculated from $p_{0}$ and $OR$
-$b = N*(1-r1)*p_{0} $ Number of controls with exposure
-$c = N*r1*(1-p_{1}) $ Number of cases without exposure
-$d = N*(1-r1)*(1-p_{0}) $ Number of controls without exposure
 
-The variables $\left\{p_{0}, p_{1}\right\}$ are given by the case description. This equation should be minimized with respect to r1. 
+$b = N*(1-r1)*p_{0}$ Number of controls with exposure
+
+$c = N*r1*(1-p_{1})$ Number of cases without exposure
+
+$d = N*(1-r1)*(1-p_{0})$ Number of controls without exposure
+
+The variables $\left\{p_{0}, p_{1}\right\}$ are given by the case description. This equation should be minimized with respect to $r_{1}$. 
 
 - note 1: The variance of the odds ratio is given as the sum of the inverses of the entries of the contingency table, therefore the exact position of which count goes to which cell is irrelevant to the current question
-- note 2: The total sample size $N$ is a factor present in each of the contingency table, and will not be relevant to the minimization problem with respect to $r_{1}$. The absolute variance of the odds ratio will of course depend on the total sample size. 
+- note 2: The total sample size $N$ is a factor equally present in each of the contingency table counts, and thus will not be relevant to the minimization problem with respect to $r_{1}$. The absolute variance of the odds ratio will of course depend on the total sample size. 
 
 ```{r}
 OR = 2
@@ -197,10 +200,9 @@ plot(r1_seq, var_ln_OR, type = "l",
 
 ```
 
-In this plot we see that for a wide range of case rates $r_{1}$, the variance in the odds-ratio will be similar. For the chosen sequence of case-rates, the variance was minimal for $r_{1} = 'r r1_seq[which.min(var_ln_OR)]'$. However, this was determined by the initially entered case rates. Now to find the minimum variance with computational measures
+In this plot we see that for a wide range of case rates $r_{1}$, the variance in the odds-ratio will be similar. For the chosen sequence of case-rates, the variance was minimal for $r_{1} = `r r1_seq[which.min(var_ln_OR)]`$. However, this was determined by the initially entered case rates. Now to find the minimum variance with a computational approach.
 
 ```{r}
-library(ROI)
 OR = 2
 p0 = 0.05
 
@@ -222,6 +224,8 @@ var_ln_OR_func <- function(x) {
   1/(x*p1) + 1/((1-x)*p0) + 1/(x*(1-p1)) + 1/((1-x)*(1-p0))
 }
 
+# library(ROI)
+# 
 # f_obj <- F_objective(F = var_ln_OR_func, n = 1)
 # opt_problem <- OP(f_obj, 
 #                   L_constraint(
@@ -236,21 +240,16 @@ var_ln_OR_func <- function(x) {
 #   
 # ROI_solve(opt_problem, start = 0.5)
 
-
-nlm(f = var_ln_OR_func, p = 0.5)
-nlm(f = var_ln_OR_func, p = 0.3)
-
-optim(par = 0.5, fn = var_ln_OR_func)
 optimize(f = var_ln_OR_func, interval = c(0,1))
-
 
 ```
 
 ## Conclusion
 
 At this point in time
-- The analytical solution and the computational solution are different, most likely I made a mistake in working out the equations
-- The optimal power calculation does not seem to equal the solution for the narrowest confidence interval of $ln(OR)$. Could this be related to the asymmetric confidence bounds for the OR? Power seeks to optimize the chance finding a lower bound > 1, while narrowing the confidence interval also cares about the upper limit.
+
+1. The analytical solution and the computational solution are different, most likely I made a mistake in working out the equations
+2. The optimal power calculation does not seem to equal the solution for the narrowest confidence interval of $ln(OR)$. Could this be related to the asymmetric confidence bounds for the OR? Power seeks to optimize the probability of finding a lower bound > 1 given a true $OR > 1$, while narrowing the confidence interval also cares about the upper limit.
 
 
 ## Session information
