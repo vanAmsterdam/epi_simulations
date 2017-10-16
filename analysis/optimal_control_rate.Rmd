@@ -127,35 +127,6 @@ df_melt %>%
 
 ```
 
-## Compare with standard power calculations
-```{r}
-OR = 2
-p0 = 0.05
-
-# the math
-O0 = p0/(1-p0)
-O1 = OR * O0
-p1 = O1/(1+O1)
-
-n = 1000
-r1_seq = seq(0.01, 0.99, by = 0.01)
-
-# see if results match from SPSS provided by instructor
-power.prop.test(n = c(600,600), p1 = p1, p2 = p0, sig.level = 0.05)
-
-# find optimal power
-powers <- sapply(r1_seq, function(r1) {
-  max(power.prop.test(n = c(n*r1, n*(1-r1)), p1 = p1, p2 = p0, sig.level = 0.05)$power)
-})
-
-
-plot(r1_seq, powers, xlab = "case rate (n_cases / n_total)", ylab = "power", main = "Power for different sampling scenarios", sub = "OR = 2, p0 = 0.05")
-
-```
-
-Here, the optimal power is found at $r_{1} = `r r1_seq[which.min(powers)]`$
-
-
 ## Computational minimum for variance of odds-ratio
 Recall that 
 
@@ -245,11 +216,63 @@ optimize(f = var_ln_OR_func, interval = c(0,1))
 
 ```
 
-## Conclusion
 
-At this point in time
+## Compare with standard power calculations
+```{r}
+OR = 2
+p0 = 0.05
 
-1. The analytical solution and the computational solution are the same.
+# the math
+O0 = p0/(1-p0)
+O1 = OR * O0
+p1 = O1/(1+O1)
+
+n = 1000
+r1_seq = seq(0.01, 0.99, by = 0.01)
+
+# see if results match from SPSS provided by instructor
+power.prop.test(n = c(600,600), p1 = p1, p2 = p0, sig.level = 0.05)
+
+# find optimal power
+powers <- sapply(r1_seq, function(r1) {
+  max(power.prop.test(n = c(n*r1, n*(1-r1)), p1 = p1, p2 = p0, sig.level = 0.05)$power)
+})
+
+
+plot(r1_seq, powers, xlab = "case rate (n_cases / n_total)", ylab = "power", main = "Power for different sampling scenarios", sub = "OR = 2, p0 = 0.05")
+
+```
+
+Here, the optimal power is found at $r_{1} = `r r1_seq[which.min(powers)]`$
+
+
+
+## Different power calculations by Frank Harrell's functions
+Using the package Hmisc by Frank Harrell, different power calculations are done.
+```{r, message = F}
+library(Hmisc)
+OR = 2
+p0 = 0.05
+
+# some math
+O0 = p0/(1-p0)
+O1 = OR * O0
+p1 = O1/(1+O1)
+
+ballocation(p1 = p1, p2 = p0, alpha = 0.5)
+
+```
+
+These results show that different ratios are optimal for different optimization goals. 
+
+From the documentation of the Hmisc package:
+
+> Given p1, p2, ballocation uses the method of Brittain and Schlesselman to compute the optimal fraction of observations to be placed in group 1 that either (1) minimize the variance of the difference in two proportions, (2) minimize the variance of the ratio of the two proportions, (3) minimize the variance of the log odds ratio, or (4) maximize the power of the 2-tailed test for differences. For (4) the total sample size must be given, or the fraction optimizing the power is not returned. The fraction for (3) is one minus the fraction for (1).
+
+More explanation can be found here: [bpower](ftp://ftp.uni-bayreuth.de/pub/math/statlib/S/Harrell/help/Hmisc/html/bpower.html)
+
+# Conclusions
+1. The analytical solution and the computational solution for minimizing the $Var(ln(OR))$ are the same.
 2. The optimal power calculation does not seem to equal the solution for the narrowest confidence interval of $ln(OR)$. Could this be related to the asymmetric confidence bounds for the OR? Power seeks to optimize the probability of finding a lower bound > 1 given a true $OR > 1$, while narrowing the confidence interval also cares about the upper limit.
 
 
