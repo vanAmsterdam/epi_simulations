@@ -61,7 +61,7 @@ p0 = 0.05
 O0 = p0/(1-p0)
 O1 = OR * O0
 p1 = O1/(1+O1)
-a  = ((p1*(1-p1))/(p0*(1-p0))) + 1
+a  = ((p1*(1-p1))/(p0*(1-p0))) - 1
 
 
 r1 = c(
@@ -248,7 +248,7 @@ optimize(f = var_ln_OR_func, interval = c(0,1))
 
 At this point in time
 
-1. The analytical solution and the computational solution are different, most likely I made a mistake in working out the equations
+1. The analytical solution and the computational solution are the same.
 2. The optimal power calculation does not seem to equal the solution for the narrowest confidence interval of $ln(OR)$. Could this be related to the asymmetric confidence bounds for the OR? Power seeks to optimize the probability of finding a lower bound > 1 given a true $OR > 1$, while narrowing the confidence interval also cares about the upper limit.
 
 
