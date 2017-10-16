@@ -316,7 +316,7 @@ shared across the workflowr files. -->
 <p><strong>Last updated:</strong> 2017-10-16</p>
 <!-- Insert the code version (Git commit SHA1) if Git repository exists and R
  package git2r is installed -->
-<p><strong>Code version:</strong> f3f13ac</p>
+<p><strong>Code version:</strong> 1fd2c82</p>
 <!-- Add your analysis here -->
 <div id="question" class="section level1">
 <h1>Question</h1>
@@ -400,42 +400,6 @@ df_melt %&gt;%
        title = &quot;Optimal number of controls in a case-control study&quot;)</code></pre>
 <p><img src="figure/optimal_control_rate.Rmd/unnamed-chunk-2-1.png" width="672" style="display: block; margin: auto;" /></p>
 </div>
-<div id="compare-with-standard-power-calculations" class="section level2">
-<h2>Compare with standard power calculations</h2>
-<pre class="r"><code>OR = 2
-p0 = 0.05
-
-# the math
-O0 = p0/(1-p0)
-O1 = OR * O0
-p1 = O1/(1+O1)
-
-n = 1000
-r1_seq = seq(0.01, 0.99, by = 0.01)
-
-# see if results match from SPSS provided by instructor
-power.prop.test(n = c(600,600), p1 = p1, p2 = p0, sig.level = 0.05)</code></pre>
-<pre><code>
-     Two-sample comparison of proportions power calculation 
-
-              n = 600, 600
-             p1 = 0.0952381
-             p2 = 0.05
-      sig.level = 0.05
-          power = 0.8562027, 0.8562027
-    alternative = two.sided
-
-NOTE: n is number in *each* group</code></pre>
-<pre class="r"><code># find optimal power
-powers &lt;- sapply(r1_seq, function(r1) {
-  max(power.prop.test(n = c(n*r1, n*(1-r1)), p1 = p1, p2 = p0, sig.level = 0.05)$power)
-})
-
-
-plot(r1_seq, powers, xlab = &quot;case rate (n_cases / n_total)&quot;, ylab = &quot;power&quot;, main = &quot;Power for different sampling scenarios&quot;, sub = &quot;OR = 2, p0 = 0.05&quot;)</code></pre>
-<p><img src="figure/optimal_control_rate.Rmd/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;" /></p>
-<p>Here, the optimal power is found at <span class="math inline">\(r_{1} = 0.5\)</span></p>
-</div>
 <div id="computational-minimum-for-variance-of-odds-ratio" class="section level2">
 <h2>Computational minimum for variance of odds-ratio</h2>
 <p>Recall that</p>
@@ -471,7 +435,7 @@ var_ln_OR &lt;- (1/a) + (1/b) + (1/c) + (1/d)
 plot(r1_seq, var_ln_OR, type = &quot;l&quot;, 
      xlab = &quot;case rate (n_cases / n_total)&quot;, ylab = &quot;Var(ln(OR))&quot;, 
      main = &quot;Variance of log-odds ratio for different sampling scenarios&quot;, sub = &quot;OR = 2, p0 = 0.05&quot;)</code></pre>
-<p><img src="figure/optimal_control_rate.Rmd/unnamed-chunk-4-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p><img src="figure/optimal_control_rate.Rmd/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;" /></p>
 <p>In this plot we see that for a wide range of case rates <span class="math inline">\(r_{1}\)</span>, the variance in the odds-ratio will be similar. For the chosen sequence of case-rates, the variance was minimal for <span class="math inline">\(r_{1} = 0.43\)</span>. However, this was determined by the initially entered case rates. Now to find the minimum variance with a computational approach.</p>
 <pre class="r"><code>OR = 2
 p0 = 0.05
@@ -517,14 +481,74 @@ optimize(f = var_ln_OR_func, interval = c(0,1))</code></pre>
 $objective
 [1] 63.91946</code></pre>
 </div>
-<div id="conclusion" class="section level2">
-<h2>Conclusion</h2>
-<p>At this point in time</p>
+<div id="compare-with-standard-power-calculations" class="section level2">
+<h2>Compare with standard power calculations</h2>
+<pre class="r"><code>OR = 2
+p0 = 0.05
+
+# the math
+O0 = p0/(1-p0)
+O1 = OR * O0
+p1 = O1/(1+O1)
+
+n = 1000
+r1_seq = seq(0.01, 0.99, by = 0.01)
+
+# see if results match from SPSS provided by instructor
+power.prop.test(n = c(600,600), p1 = p1, p2 = p0, sig.level = 0.05)</code></pre>
+<pre><code>
+     Two-sample comparison of proportions power calculation 
+
+              n = 600, 600
+             p1 = 0.0952381
+             p2 = 0.05
+      sig.level = 0.05
+          power = 0.8562027, 0.8562027
+    alternative = two.sided
+
+NOTE: n is number in *each* group</code></pre>
+<pre class="r"><code># find optimal power
+powers &lt;- sapply(r1_seq, function(r1) {
+  max(power.prop.test(n = c(n*r1, n*(1-r1)), p1 = p1, p2 = p0, sig.level = 0.05)$power)
+})
+
+
+plot(r1_seq, powers, xlab = &quot;case rate (n_cases / n_total)&quot;, ylab = &quot;power&quot;, main = &quot;Power for different sampling scenarios&quot;, sub = &quot;OR = 2, p0 = 0.05&quot;)</code></pre>
+<p><img src="figure/optimal_control_rate.Rmd/unnamed-chunk-5-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Here, the optimal power is found at <span class="math inline">\(r_{1} = 0.5\)</span></p>
+</div>
+<div id="different-power-calculations-by-frank-harrells-functions" class="section level2">
+<h2>Different power calculations by Frank Harrell’s functions</h2>
+<p>Using the package Hmisc by Frank Harrell, different power calculations are done.</p>
+<pre class="r"><code>library(Hmisc)</code></pre>
+<pre><code>Warning: package &#39;Hmisc&#39; was built under R version 3.4.2</code></pre>
+<pre class="r"><code>OR = 2
+p0 = 0.05
+
+# some math
+O0 = p0/(1-p0)
+O1 = OR * O0
+p1 = O1/(1+O1)
+
+ballocation(p1 = p1, p2 = p0, alpha = 0.5)</code></pre>
+<pre><code>   fraction.group1.min.var.diff   fraction.group1.min.var.ratio 
+                      0.5739006                       0.4142136 
+fraction.group1.min.var.logodds 
+                      0.4260994 </code></pre>
+<p>These results show that different ratios are optimal for different optimization goals.</p>
+<p>From the documentation of the Hmisc package:</p>
+<blockquote>
+<p>Given p1, p2, ballocation uses the method of Brittain and Schlesselman to compute the optimal fraction of observations to be placed in group 1 that either (1) minimize the variance of the difference in two proportions, (2) minimize the variance of the ratio of the two proportions, (3) minimize the variance of the log odds ratio, or (4) maximize the power of the 2-tailed test for differences. For (4) the total sample size must be given, or the fraction optimizing the power is not returned. The fraction for (3) is one minus the fraction for (1).</p>
+</blockquote>
+<p>More explanation can be found here: <a href="ftp://ftp.uni-bayreuth.de/pub/math/statlib/S/Harrell/help/Hmisc/html/bpower.html">bpower</a></p>
+</div>
+</div>
+<div id="conclusions" class="section level1">
+<h1>Conclusions</h1>
 <ol style="list-style-type: decimal">
-<li>The analytical solution and the computational solution are the same.</li>
+<li>The analytical solution and the computational solution for minimizing the <span class="math inline">\(Var(ln(OR))\)</span> are the same.</li>
 <li>The optimal power calculation does not seem to equal the solution for the narrowest confidence interval of <span class="math inline">\(ln(OR)\)</span>. Could this be related to the asymmetric confidence bounds for the OR? Power seeks to optimize the probability of finding a lower bound &gt; 1 given a true <span class="math inline">\(OR &gt; 1\)</span>, while narrowing the confidence interval also cares about the upper limit.</li>
 </ol>
-</div>
 <div id="session-information" class="section level2">
 <h2>Session information</h2>
 <!-- Insert the session information into the document -->
@@ -544,17 +568,24 @@ attached base packages:
 [1] stats     graphics  grDevices utils     datasets  methods   base     
 
 other attached packages:
-[1] magrittr_1.5       ggplot2_2.2.1.9000 data.table_1.10.4 
+[1] Hmisc_4.0-3        Formula_1.2-2      survival_2.41-3   
+[4] lattice_0.20-35    magrittr_1.5       ggplot2_2.2.1.9000
+[7] data.table_1.10.4 
 
 loaded via a namespace (and not attached):
- [1] Rcpp_0.12.12      knitr_1.17        munsell_0.4.3    
- [4] colorspace_1.3-2  rlang_0.1.2       stringr_1.2.0    
- [7] plyr_1.8.4        tools_3.4.1       grid_3.4.1       
-[10] gtable_0.2.0      git2r_0.19.0      htmltools_0.3.6  
-[13] yaml_2.1.14       lazyeval_0.2.0    rprojroot_1.2    
-[16] digest_0.6.12     tibble_1.3.4      evaluate_0.10.1  
-[19] rmarkdown_1.6     labeling_0.3      stringi_1.1.5    
-[22] compiler_3.4.1    scales_0.5.0.9000 backports_1.1.0  </code></pre>
+ [1] Rcpp_0.12.12        compiler_3.4.1      RColorBrewer_1.1-2 
+ [4] git2r_0.19.0        plyr_1.8.4          base64enc_0.1-3    
+ [7] tools_3.4.1         rpart_4.1-11        digest_0.6.12      
+[10] checkmate_1.8.4     htmlTable_1.9       evaluate_0.10.1    
+[13] tibble_1.3.4        gtable_0.2.0        rlang_0.1.2        
+[16] Matrix_1.2-10       yaml_2.1.14         gridExtra_2.3      
+[19] stringr_1.2.0       knitr_1.17          cluster_2.0.6      
+[22] htmlwidgets_0.9     rprojroot_1.2       grid_3.4.1         
+[25] nnet_7.3-12         foreign_0.8-69      rmarkdown_1.6      
+[28] latticeExtra_0.6-28 backports_1.1.0     scales_0.5.0.9000  
+[31] htmltools_0.3.6     splines_3.4.1       colorspace_1.3-2   
+[34] labeling_0.3        stringi_1.1.5       acepack_1.4.1      
+[37] lazyeval_0.2.0      munsell_0.4.3      </code></pre>
 </div>
 </div>
 
