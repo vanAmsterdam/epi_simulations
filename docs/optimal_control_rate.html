@@ -316,7 +316,7 @@ shared across the workflowr files. -->
 <p><strong>Last updated:</strong> 2017-10-16</p>
 <!-- Insert the code version (Git commit SHA1) if Git repository exists and R
  package git2r is installed -->
-<p><strong>Code version:</strong> 8e52d71</p>
+<p><strong>Code version:</strong> f3f13ac</p>
 <!-- Add your analysis here -->
 <div id="question" class="section level1">
 <h1>Question</h1>
@@ -351,7 +351,6 @@ r1 = c(
 <p>This yields 2 results for <span class="math inline">\(r_{1}\)</span>: <span class="math inline">\(\left\{0.43, -2.88\right\}\)</span>, where <span class="math inline">\(r_{1} = 0.43\)</span> is the only viable option.</p>
 <p>Now the ratio of cases:controls</p>
 <p><span class="math inline">\(\frac{N_{cases}}{N_{controls}} = \frac{r_{1}}{1-r_{1}} = 0.74\)</span></p>
-<p>So about 2 controls per case.</p>
 <p>For a range of odds ratios and exposure rates, with plot</p>
 <pre class="r"><code>require(data.table)
 require(ggplot2)
@@ -383,8 +382,8 @@ for (i in 1:length(p0_values)) {
 df &lt;- as.data.table(control_array)
 df[, OR:=OR]
 df_melt &lt;- melt(df, id.vars = &quot;OR&quot;, 
-                variable.name = &quot;exposure_prevalence&quot;, value.name = &quot;n_controls&quot;)
-df_melt[, exposure_prevalence:=factor(exposure_prevalence, 
+                variable.name = &quot;exposure_prevalence_source_population&quot;, value.name = &quot;n_controls&quot;)
+df_melt[, exposure_prevalence:=factor(exposure_prevalence_source_population, 
                                       levels = setdiff(colnames(df), &quot;OR&quot;),
                                       labels = p0_values)]
 
@@ -395,7 +394,7 @@ df_melt[, exposure_prevalence:=factor(exposure_prevalence,
 #      main = &quot;Optimal number of controls in a case-control study&quot;, sub = &quot;given an exposure prevalence = 0.05 in the source population&quot;)
 
 df_melt %&gt;%
-  ggplot(aes(x = OR, y = n_controls, col = exposure_prevalence)) + 
+  ggplot(aes(x = OR, y = n_controls, col = exposure_prevalence_source_population)) + 
   geom_line() + 
   labs(x = &quot;Expected odds ratio&quot;, y = &quot;Optimal number of controls&quot;,
        title = &quot;Optimal number of controls in a case-control study&quot;)</code></pre>
@@ -435,6 +434,7 @@ powers &lt;- sapply(r1_seq, function(r1) {
 
 plot(r1_seq, powers, xlab = &quot;case rate (n_cases / n_total)&quot;, ylab = &quot;power&quot;, main = &quot;Power for different sampling scenarios&quot;, sub = &quot;OR = 2, p0 = 0.05&quot;)</code></pre>
 <p><img src="figure/optimal_control_rate.Rmd/unnamed-chunk-3-1.png" width="672" style="display: block; margin: auto;" /></p>
+<p>Here, the optimal power is found at <span class="math inline">\(r_{1} = 0.5\)</span></p>
 </div>
 <div id="computational-minimum-for-variance-of-odds-ratio" class="section level2">
 <h2>Computational minimum for variance of odds-ratio</h2>
