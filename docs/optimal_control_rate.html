@@ -313,10 +313,10 @@ div.tocify {
 shared across the workflowr files. -->
 <!-- Update knitr chunk options -->
 <!-- Insert the date the file was last updated -->
-<p><strong>Last updated:</strong> 2017-10-13</p>
+<p><strong>Last updated:</strong> 2017-10-16</p>
 <!-- Insert the code version (Git commit SHA1) if Git repository exists and R
  package git2r is installed -->
-<p><strong>Code version:</strong> 756945a</p>
+<p><strong>Code version:</strong> 8e52d71</p>
 <!-- Add your analysis here -->
 <div id="question" class="section level1">
 <h1>Question</h1>
@@ -342,15 +342,15 @@ p0 = 0.05
 O0 = p0/(1-p0)
 O1 = OR * O0
 p1 = O1/(1+O1)
-a  = ((p1*(1-p1))/(p0*(1-p0))) + 1
+a  = ((p1*(1-p1))/(p0*(1-p0))) - 1
 
 
 r1 = c(
   (-2+sqrt(4 - 4*a*(-1)))/(2*a),
   (-2-sqrt(4 - 4*a*(-1)))/(2*a))</code></pre>
-<p>This yields 2 results for <span class="math inline">\(r_{1}\)</span>: <span class="math inline">\(\left\{0.34, -1.05\right\}\)</span>, where <span class="math inline">\(r_{1} = 0.34\)</span> is the only viable option.</p>
+<p>This yields 2 results for <span class="math inline">\(r_{1}\)</span>: <span class="math inline">\(\left\{0.43, -2.88\right\}\)</span>, where <span class="math inline">\(r_{1} = 0.43\)</span> is the only viable option.</p>
 <p>Now the ratio of cases:controls</p>
-<p><span class="math inline">\(\frac{N_{cases}}{N_{controls}} = \frac{r_{1}}{1-r_{1}} = 0.51\)</span></p>
+<p><span class="math inline">\(\frac{N_{cases}}{N_{controls}} = \frac{r_{1}}{1-r_{1}} = 0.74\)</span></p>
 <p>So about 2 controls per case.</p>
 <p>For a range of odds ratios and exposure rates, with plot</p>
 <pre class="r"><code>require(data.table)
@@ -521,7 +521,7 @@ $objective
 <h2>Conclusion</h2>
 <p>At this point in time</p>
 <ol style="list-style-type: decimal">
-<li>The analytical solution and the computational solution are different, most likely I made a mistake in working out the equations</li>
+<li>The analytical solution and the computational solution are the same.</li>
 <li>The optimal power calculation does not seem to equal the solution for the narrowest confidence interval of <span class="math inline">\(ln(OR)\)</span>. Could this be related to the asymmetric confidence bounds for the OR? Power seeks to optimize the probability of finding a lower bound &gt; 1 given a true <span class="math inline">\(OR &gt; 1\)</span>, while narrowing the confidence interval also cares about the upper limit.</li>
 </ol>
 </div>
