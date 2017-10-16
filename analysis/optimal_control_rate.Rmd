@@ -76,8 +76,6 @@ Now the ratio of cases:controls
 
 $\frac{N_{cases}}{N_{controls}} = \frac{r_{1}}{1-r_{1}} = `r round(r1[1]/(1-r1[1]), 2)`$
 
-So about 2 controls per case.
-
 For a range of odds ratios and exposure rates, with plot
 ```{r, message=F}
 require(data.table)
@@ -110,8 +108,8 @@ for (i in 1:length(p0_values)) {
 df <- as.data.table(control_array)
 df[, OR:=OR]
 df_melt <- melt(df, id.vars = "OR", 
-                variable.name = "exposure_prevalence", value.name = "n_controls")
-df_melt[, exposure_prevalence:=factor(exposure_prevalence, 
+                variable.name = "exposure_prevalence_source_population", value.name = "n_controls")
+df_melt[, exposure_prevalence:=factor(exposure_prevalence_source_population, 
                                       levels = setdiff(colnames(df), "OR"),
                                       labels = p0_values)]
 
@@ -122,7 +120,7 @@ df_melt[, exposure_prevalence:=factor(exposure_prevalence,
 #      main = "Optimal number of controls in a case-control study", sub = "given an exposure prevalence = 0.05 in the source population")
 
 df_melt %>%
-  ggplot(aes(x = OR, y = n_controls, col = exposure_prevalence)) + 
+  ggplot(aes(x = OR, y = n_controls, col = exposure_prevalence_source_population)) + 
   geom_line() + 
   labs(x = "Expected odds ratio", y = "Optimal number of controls",
        title = "Optimal number of controls in a case-control study")
@@ -154,6 +152,9 @@ powers <- sapply(r1_seq, function(r1) {
 plot(r1_seq, powers, xlab = "case rate (n_cases / n_total)", ylab = "power", main = "Power for different sampling scenarios", sub = "OR = 2, p0 = 0.05")
 
 ```
+
+Here, the optimal power is found at $r_{1} = `r r1_seq[which.min(powers)]`$
+
 
 ## Computational minimum for variance of odds-ratio
 Recall that 
